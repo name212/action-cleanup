@@ -168,7 +168,6 @@ jobs:
           echo "CLEANUP_PATH_DIR_EMPTY=${empty_dir}" >> $GITHUB_ENV
       
       - name: Create dirs
-        id: dirs
         run: |
           echo "Error!"
           exit 1
