@@ -1,0 +1,83 @@
+name: Cleanup files after job
+
+description: |
+  Remove files and directories after run job.
+  Get paths for remove from envs with prefix `DO_CLEANUP_`
+inputs:
+  verbose:
+    description: |
+      Run rm with `-v` flag and enable some debug logs.
+    required: false
+    default: "true"
+runs:
+  using: composite
+  steps:
+    - name: Setup
+      shell: bash
+      env:
+        VERBOSE_ENABLED: ${{ inputs.verbose }}
+      run: |
+        # Do cleanup
+
+        function echo_error() {
+          echo -e "\033[1;31m${1:-}\033[0m"
+        }
+
+        function echo_debug() {
+          if [ "${VERBOSE_ENABLED:-}" == "true" ]; then
+            echo -e "\033[0;32m${1:-}\033[0m"
+          fi
+        }
+
+        echo "::group::Cleanup"
+
+        run_flags="-rf"
+
+        if [[ "${VERBOSE_ENABLED:-}" == "true" ]]; then
+          run_flags="${run_flags}v"
+        fi
+
+        failed=""
+        removed_files=0
+        found_envs=0
+
+        for var_name in "${!DO_CLEANUP_@}"; do
+          ((found_envs++))
+
+          path_to_remove="${!var_name}"
+
+          echo_debug "Found env ${var_name}=${path_to_remove}"
+
+          if [ -z "$path_to_remove" ]; then
+            echo_debug "Got empty path for '${var_name}'. Skip"
+            continue
+          fi
+
+          if [[ "$path_to_remove" == "." || "$path_to_remove" == ".." || "$path_to_remove" == "/" ]]; then
+            echo_error "Found incorrect path '$path_to_remove' for '$var_name'. Skip"
+            continue
+          fi
+
+          real_path=""
+          if ! real_path="$(realpath "$path_to_remove")"; then
+            echo_error "Cannot get real path for '$path_to_remove' for env '$var_name'. Skip"
+            continue
+          fi
+
+          if ! rm $run_flags "$real_path"; then
+            echo_error "Cannot remove '$real_path' via 'rm $run_flags "$real_path"'"
+            failed="true"
+          fi
+          ((removed_files++))
+        done
+
+        if [ -n "$failed" ]; then
+          echo_error "Some paths not delete. See logs above"
+          exit 1
+        fi
+
+        echo_debug "Cleanup: found envs: $found_envs; removed: $removed_files"
+
+        echo -e "\033[0;32mDone!\033[0m"
+
+        echo "::endgroup::"
