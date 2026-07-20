@@ -42,7 +42,7 @@ runs:
         found_envs=0
 
         for var_name in "${!DO_CLEANUP_@}"; do
-          found_envs=$((found_envs++))
+          found_envs=$((found_envs+1))
 
           path_to_remove="${!var_name}"
 
@@ -68,7 +68,7 @@ runs:
             echo_error "Cannot remove '$real_path' via 'rm $run_flags \"$real_path\"'"
             failed="true"
           fi
-          removed_files=$((removed_files++))
+          removed_files=$((removed_files+1))
         done
 
         if [ -n "$failed" ]; then
