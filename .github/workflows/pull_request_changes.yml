@@ -120,4 +120,59 @@ jobs:
           echo "CLEANUP_PATH_DIR_EMPTY=${empty_dir}" >> $GITHUB_ENV
     
       - name: Run action
+        uses: ./ 
+  fail:
+    name: "Run cleanup tests with always and fail"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - *checkout_step
+      - name: Create files
+        id: files
+        run: |
+          empty=""
+          not_exists=".not_exists"
+          first=".first_file"
+          second="$(realpath .)"
+          second="${second}/second-file"
+
+          echo "first" > "$first"
+          echo "second" > "$second"
+          
+          echo "CLEANUP_PATH_FILE_FIRST=${first}" >> $GITHUB_ENV
+          echo "CLEANUP_PATH_FILE_SECOND=${second}" >> $GITHUB_ENV
+          echo "CLEANUP_PATH_FILE_EMPTY=${empty}" >> $GITHUB_ENV
+          echo "CLEANUP_PATH_FILE_NOT_EXISTS=${not_exists}" >> $GITHUB_ENV
+      
+      - name: Create dirs
+        id: dirs
+        run: |
+          empty_dir="empty"
+          first=".first_dir"
+          second="$(realpath .)"
+          second="${second}/second-dir"
+          second_sub="${second}/sub-dir"
+
+          for dd in "$empty_dir" "$first" "$second" "$second_sub"; do
+            mkdir -p "$dd"
+          done
+
+          echo "first" > "${first}/first.txt"
+          echo "second" > "${second}/second.txt"
+          echo "third" > "${second}/third.txt"
+          echo "four" > "${second_sub}/third.txt"
+          
+          echo "CLEANUP_PATH_DIR_FIRST=${first}" >> $GITHUB_ENV
+          echo "CLEANUP_PATH_DIR_SECOND=${second}" >> $GITHUB_ENV
+          echo "CLEANUP_PATH_DIR_EMPTY=${empty_dir}" >> $GITHUB_ENV
+      
+      - name: Create dirs
+        id: dirs
+        run: |
+          echo "Error!"
+          exit 1
+
+      - name: Run action
+        if: always()
         uses: ./
