@@ -79,7 +79,7 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      - &checkout_step
+      - *checkout_step
       - name: Create files
         id: files
         run: |
