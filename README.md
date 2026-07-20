@@ -20,17 +20,20 @@ If action should not fail, pass `continue-on-error: true` to action, like:
 
 ```yaml
 - name: Run action
-  uses: name212/action-cleanup@v1
+  uses: name212/action-cleanup@v2
+  if: always()
   continue-on-error: true
 ```
 
 ## Usage
 
 ```yaml
-- uses: name212/action-cleanup@v1
+- uses: name212/action-cleanup@v2
   # Pass path's via envs with prefix CLEANUP_PATH_
   env:
     CLEANUP_PATH_BUILD_DIR: "./build"
+  # Use always for cleanup
+  if: always()
   with:
     ##! if uses or action_dir were not passed. Action will fail 
     
@@ -91,7 +94,8 @@ jobs:
         echo "dir_with_files=${dir_with_files}" >> $GITHUB_OUTPUT
 
     - name: Run action
-      uses: name212/action-cleanup@v1
+      uses: name212/action-cleanup@v2
+      if: always()
       env:
         CLEANUP_PATH_FILE_FIRST: ${{ steps.files.outputs.first }}
         CLEANUP_PATH_FILE_SECOND: ${{ steps.files.outputs.second }}
@@ -151,5 +155,6 @@ jobs:
         echo "CLEANUP_PATH_DIR=${dir_with_files}" >> $GITHUB_ENV
 
     - name: Run action
-      uses: name212/action-cleanup@v1
+      uses: name212/action-cleanup@v2
+      if: always()
 ```
