@@ -1,0 +1,123 @@
+name: Pull request changes
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+jobs:
+  pass_directly_tests:
+    name: "Run cleanup tests pass directly via envs"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - &checkout_step
+        name: Checkout
+        uses: actions/checkout@v6.0.2
+        with:
+          fetch-depth: 0
+          submodules: "recursive"
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Create files
+        id: files
+        run: |
+          empty=""
+          not_exists=".not_exists"
+          first=".first_file"
+          second="$(realpath .)"
+          second="${second}/second-file"
+
+          echo "first" > "$first"
+          echo "second" > "$second"
+          
+          echo "first=${first}" >> $GITHUB_OUTPUT
+          echo "second=${second}" >> $GITHUB_OUTPUT
+          echo "empty=${empty}" >> $GITHUB_OUTPUT
+          echo "not_exists=${not_exists}" >> $GITHUB_OUTPUT
+      
+      - name: Create dirs
+        id: dirs
+        run: |
+          empty_dir="empty"
+          first=".first_dir"
+          second="$(realpath .)"
+          second="${second}/second-dir"
+          second_sub="${second}/sub-dir"
+
+          for dd in "$empty_dir" "$first" "$second" "$second_sub"; do
+            mkdir -p "$dd"
+          done
+
+          echo "first" > "${first}/first.txt"
+          echo "second" > "${second}/second.txt"
+          echo "third" > "${second}/third.txt"
+          echo "four" > "${second_sub}/third.txt"
+          
+          echo "first=${first}" >> $GITHUB_OUTPUT
+          echo "second=${second}" >> $GITHUB_OUTPUT
+          echo "empty_dir=${empty_dir}" >> $GITHUB_OUTPUT
+    
+      - name: Run action
+        uses: ./
+        env:
+          DO_CLEANUP_FILE_FIRST: ${{ steps.files.outputs.first }}
+          DO_CLEANUP_FILE_SECOND: ${{ steps.files.outputs.second }}
+          DO_CLEANUP_FILE_EMPTY: ${{ steps.files.outputs.empty }}
+          DO_CLEANUP_FILE_NOT_EXISTS: ${{ steps.files.outputs.not_exists }}
+          DO_CLEANUP_FILE_NOT_EXISTS_IN_OUTPUTS: ${{ steps.files.outputs.no_output }}
+          DO_CLEANUP_DIR_FIRST: ${{ steps.dirs.outputs.first }}
+          DO_CLEANUP_DIR_SECOND: ${{ steps.dirs.outputs.second }}
+          DO_CLEANUP_DIR_EMPTY: ${{ steps.dirs.outputs.empty_dir }}
+          DO_CLEANUP_DIR_EMPTY_IN_OUTPUTS: ${{ steps.dirs.outputs.output_no }}
+
+  pass_via_github_env_tests:
+    name: "Run cleanup tests pass via GITHUB_ENV"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - &checkout_step
+      - name: Create files
+        id: files
+        run: |
+          empty=""
+          not_exists=".not_exists"
+          first=".first_file"
+          second="$(realpath .)"
+          second="${second}/second-file"
+
+          echo "first" > "$first"
+          echo "second" > "$second"
+          
+          echo "DO_CLEANUP_FILE_FIRST=${first}" >> $GITHUB_ENV
+          echo "DO_CLEANUP_FILE_SECOND=${second}" >> $GITHUB_ENV
+          echo "DO_CLEANUP_FILE_EMPTY=${empty}" >> $GITHUB_ENV
+          echo "DO_CLEANUP_FILE_NOT_EXISTS=${not_exists}" >> $GITHUB_ENV
+      
+      - name: Create dirs
+        id: dirs
+        run: |
+          empty_dir="empty"
+          first=".first_dir"
+          second="$(realpath .)"
+          second="${second}/second-dir"
+          second_sub="${second}/sub-dir"
+
+          for dd in "$empty_dir" "$first" "$second" "$second_sub"; do
+            mkdir -p "$dd"
+          done
+
+          echo "first" > "${first}/first.txt"
+          echo "second" > "${second}/second.txt"
+          echo "third" > "${second}/third.txt"
+          echo "four" > "${second_sub}/third.txt"
+          
+          echo "DO_CLEANUP_DIR_FIRST=${first}" >> $GITHUB_ENV
+          echo "DO_CLEANUP_DIR_SECOND=${second}" >> $GITHUB_ENV
+          echo "DO_CLEANUP_DIR_EMPTY=${empty_dir}" >> $GITHUB_ENV
+    
+      - name: Run action
+        uses: ./
