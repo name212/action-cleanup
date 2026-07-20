@@ -2,11 +2,11 @@ name: Cleanup files after job
 
 description: |
   Remove files and directories after run job.
-  Get paths for remove from envs with prefix `DO_CLEANUP_`
+  Get paths for remove from envs with prefix `CLEANUP_PATH_`
 inputs:
   verbose:
     description: |
-      Run rm with `-v` flag and enable some debug logs.
+      Run `rm` with `-v` flag and enable some debug logs.
     required: false
     default: "true"
 runs:
@@ -41,7 +41,7 @@ runs:
         removed_files=0
         found_envs=0
 
-        for var_name in "${!DO_CLEANUP_@}"; do
+        for var_name in "${!CLEANUP_PATH_@}"; do
           found_envs=$((found_envs+1))
 
           path_to_remove="${!var_name}"
