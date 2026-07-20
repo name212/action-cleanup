@@ -65,7 +65,7 @@ runs:
           fi
 
           if ! rm $run_flags "$real_path"; then
-            echo_error "Cannot remove '$real_path' via 'rm $run_flags "$real_path"'"
+            echo_error "Cannot remove '$real_path' via 'rm $run_flags \"$real_path\"'"
             failed="true"
           fi
           ((removed_files++))
